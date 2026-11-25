@@ -9,6 +9,8 @@
     "Physics"
   ],
   "daily": true,
+  "difficulty": 2,
+  "difficultyNote": "No clock and no way to lose in the daily bowl. Rush mode adds the pressure.",
   "verb": "Spell",
   "tone": "mint",
   "players": "1 player",
