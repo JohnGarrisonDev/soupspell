@@ -1,0 +1,27 @@
+{
+  "slug": "soupspell",
+  "title": "Soupspell",
+  "tagline": "Stir the soup. Herd the letters. Spell something tasty.",
+  "description": "A word game where the letters are physical: they float in a big bowl of alphabet soup, and you can only spell through letters that touch. So grab the spoon, stir the ones you need together, and slurp up the longest word you can. A new Daily Bowl for everyone each day, a 90-second Rush, and endless Zen.",
+  "genre": "Word physics",
+  "kinds": [
+    "Word",
+    "Physics"
+  ],
+  "daily": true,
+  "verb": "Spell",
+  "tone": "mint",
+  "players": "1 player",
+  "session": "5–10 min bowls",
+  "controls": [
+    "Keyboard",
+    "Mouse",
+    "Touch"
+  ],
+  "version": "1.0.0",
+  "released": "2026-11-24",
+  "updated": "2026-11-24",
+  "repo": "https://github.com/JohnGarrisonDev/soupspell",
+  "cover": "cover.webp",
+  "coverAlt": "Illustration: an odd little robot chef stirs a giant bowl of alphabet soup with a wooden spoon, round noodle tiles swirling in the broth as a few leap out in a splash."
+}
