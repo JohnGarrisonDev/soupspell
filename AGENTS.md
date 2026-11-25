@@ -52,6 +52,10 @@ Changing the dictionary does not change recipes, but it can change which star-pa
 
 One blob at `oddvale:soupspell`; schema at the top of `save.js`. `sanitize()` rebuilds a clean save from whatever it finds, so add new fields there with a default. `progress.daily / rush / zen` hold one snapshot each, written after every word, when a stir ends, every 5 seconds while things move, and when the tab hides. `last` remembers which bowl was on screen so a reload drops back into it (Rush resumes paused). A daily snapshot from another date is ignored.
 
+## Player input (`kit/talk.js`)
+
+The hub's anonymous player-input widgets (copy of the kit, do not edit). `openResult` calls `dailyTalk` for the Daily Bowl only, into an empty `[data-talk]` under the buttons, with `key` = the bowl's date and `score` = points (higher is better; API board `bowl`, the default). Boot calls `tellUs` into `#tell-us` in the info section. Both stay hidden when the API (`/api/v1/`) is unreachable, so a plain static server shows nothing extra.
+
 ## Testing by hand
 
 Serve the folder and open `/?debug`. `window.__game` has: `state()`, `advance(seconds)` (runs the fixed-step update, then draws; use it because background tabs throttle animation frames), `tilePoint(id)` and `worldPoint(x, y)` (client coordinates for synthetic pointer events), `words(maxLen)` (linked words right now), `spellBest(maxLen)` (spells one through the real code path), `stroke(seed)` (a spoon stroke toward the middle), `devour(maxLen)` (finishes the bowl with the position-blind bot), plus `app`, `save`, `actions`, `ui`.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 (2026-11-25)
+
+- Tell us how hard today's Daily Bowl was with one tap, and see how your score did against everyone else's today. Anonymous: nothing about you is stored.
+- A new "Tell us" card under the game: thumbs up or down and a few one-tap notes, no account needed.
+- A Privacy link in the footer.
+
 ## 1.0.0 (2026-11-24)
 
 First bowl served.

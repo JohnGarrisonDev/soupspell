@@ -8,6 +8,7 @@ import { dateKey, streakInfo, recentDays, rating, nextRating, shareText, compare
 import { defaults, sanitize, recordWord, recordBowl, ACHIEVEMENTS } from './logic/save.js'
 import { linkedWords, playFree, strokeIn } from './logic/bot.js'
 import { makeRng } from '../kit/kit.js'
+import { dailyTalk, tellUs } from '../kit/talk.js'
 import { createRenderer } from './render.js'
 import { createUI } from './ui.js'
 import { snd } from './audio.js'
@@ -330,7 +331,8 @@ function openResult({ mode, session, saved, rec, date }) {
       <div class="stack">
         <button class="btn primary" data-act="share" data-focus>Copy result</button>
         <div class="row2"><button class="btn" data-act="rush">Play Rush</button><button class="btn" data-act="title">Menu</button></div>
-      </div>`
+      </div>
+      <div data-talk></div>`
   } else {
     const s = session
     body = `
@@ -349,6 +351,8 @@ function openResult({ mode, session, saved, rec, date }) {
       </div>`
   }
   ui.openModal('result', body)
+  // Anonymous difficulty vote and "you beat N%": fills in after the card shows, stays hidden if the API is unreachable.
+  if (mode === 'daily') dailyTalk(ui.modalEl.querySelector('[data-talk]'), { game: 'soupspell', key: date, score: saved ? saved.score : session.score, compact: true })
 }
 
 function openRecords() {
@@ -643,6 +647,7 @@ document.addEventListener('fullscreenchange', relayout)
 // ------------------------------------------------------------------ boot
 
 wireChrome({ stage })
+tellUs(document.getElementById('tell-us'), { game: 'soupspell', issueUrl: 'https://github.com/JohnGarrisonDev/soupspell/issues/new?template=feedback.yml' })
 buildDemo()
 ui.show('title'); refreshTitle(); relayout()
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout)
