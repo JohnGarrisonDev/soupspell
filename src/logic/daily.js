@@ -47,7 +47,7 @@ export const nextRating = (score) => RATINGS.find((b) => b.min > score) || null
 /** Spoiler-free result text. Never contains the words themselves. */
 export function shareText({ date, score, words, bestLen }) {
   const best = bestLen > 0 ? ` · best: ${bestLen} letters${bestLen >= 7 ? ' ★' : ''}` : ''
-  return `Soupspell ${date} · ${score} pts · ${words} ${words === 1 ? 'word' : 'words'}${best}\n${rating(score).name}\ngames.oddvale.com/soupspell`
+  return `Soupspell ${date} · ${score} pts · ${words} ${words === 1 ? 'word' : 'words'}${best}\n${rating(score).name}\nhttps://games.oddvale.com/soupspell/`
 }
 
 /** How today compares with earlier days: { days, average, best, rank } over previous results (today excluded). */

@@ -182,5 +182,31 @@
 .stage.is-full .modal-wrap { padding-top: 60px; }
 .stage.is-full.portrait .title-head { padding-right: 50px; }
 
+/* 1.3: on a tall phone the bowl is limited by height, so every pixel above and below it goes to the bowl
+   (bigger noodles): tighter gaps, a shorter word box, buttons at the 44px floor. */
+.portrait .play { gap: 0.3em; padding: 0.5em 0.6em 0.55em; }
+/* The word box keeps one height whatever it shows (it used to grow by 6-10px when a trace began, which shrank
+   the bowl under the finger mid-word). */
+.portrait .wordbox { height: 4em; min-height: 0; padding-block: 0.2em; gap: 0.15em; overflow: hidden; }
+.portrait .wordbox .word { font-size: min(1.9em, calc(100cqw / (var(--n, 4) + 1.3) / 0.74)); }
+.portrait .wordbox .wordsub { line-height: 1.15; }
+.portrait .actions .btn { min-height: 44px; padding-block: 0.3em; }
+.iconbtn { min-width: 44px; min-height: 44px; } /* the 44px touch floor (was 42px) */
+/* Sideways phone outside full screen (a 294px-tall stage): Spell it poked 3px out of the bottom and Clear was 41px. */
+.stage:not(.portrait) .actions .btn { min-width: 44px; }
+.stage:not(.portrait) .actions .btn.primary { min-height: 44px; padding-block: 0.35em; }
+
+/* The Daily result card: one column upright; on a sideways screen two columns (rating and stats | words and
+   buttons) so it fits a 390px-tall phone without scrolling. */
+.modal .r-col { display: contents; }
+.stage:not(.portrait) .modal[data-kind="result"]:has(.r-col) { width: min(100%, 46em); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 1.3em; align-items: start; padding: 1em 1.2em 1.1em; }
+.stage:not(.portrait) .modal[data-kind="result"] .r-col { display: grid; gap: 0.5em; align-content: start; min-width: 0; }
+.stage:not(.portrait) .modal[data-kind="result"] .r-col .stack { margin-top: 0.1em; }
+.stage:not(.portrait) .modal[data-kind="result"] h3 { font-size: 1.8em; }
+
+/* Copy result fallback (1.3): when the browser refuses the clipboard, the text shows here, selected, to copy by hand. */
+.modal .sharebox { width: 100%; min-height: 4.2em; resize: none; padding: 0.5em 0.6em; border: 2px solid var(--edge); border-radius: 0.8em; background: #fffdf8; color: var(--ink); font: 500 max(0.85em, 13px)/1.35 var(--font-mono); -webkit-user-select: text; user-select: text; }
+.modal .sharenote { margin: 0; font-size: max(0.85em, 13px); }
+
 /* Kit workaround: the injected "Play full screen" button's icon has no size in kit/shell.css. */
 .stage-cta svg { width: 20px; height: 20px; flex: none; }

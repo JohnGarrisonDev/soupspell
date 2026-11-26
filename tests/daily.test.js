@@ -39,7 +39,7 @@ test('share text is spoiler-free and ends with the link', () => {
   const t = shareText({ date: '2026-11-24', score: 412, words: 14, bestLen: 7 })
   assert.equal(t.split('\n')[0], 'Soupspell 2026-11-24 · 412 pts · 14 words · best: 7 letters ★')
   assert.equal(t.split('\n')[1], 'Soup Sorcerer')
-  assert.ok(t.endsWith('\ngames.oddvale.com/soupspell'))
+  assert.ok(t.endsWith('\nhttps://games.oddvale.com/soupspell/'))
   assert.equal(shareText({ date: '2026-11-24', score: 9, words: 1, bestLen: 4 }).split('\n')[0], 'Soupspell 2026-11-24 · 9 pts · 1 word · best: 4 letters')
   assert.equal(shareText({ date: '2026-11-24', score: 0, words: 0, bestLen: 0 }).split('\n')[0], 'Soupspell 2026-11-24 · 0 pts · 0 words')
 })

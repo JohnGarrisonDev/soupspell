@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createSession, evaluate, submit, canExtend, reachable, tick, finish, canFinish, hint, peek, ladleLeft, anyWord, eachWord, snapshot, restore, MODES, CHILI_SECS, COMBO_SECS, MEAT_ID } from '../src/logic/game.js'
+import { createSession, evaluate, submit, canExtend, reachable, tick, finish, canFinish, hint, peek, ladleLeft, anyWord, eachWord, snapshot, restore, MODES, CHILI_SECS, COMBO_SECS, MEAT_ID, isCommon, bestLeft, isEveryday } from '../src/logic/game.js'
 import { scoreWord, VALUES, LENGTH_MULT, comboMult } from '../src/logic/letters.js'
 import { settle, TILE_R, BOWL_R } from '../src/logic/soup.js'
 import { dict, bowlOf, ids } from './helpers.js'
@@ -170,6 +170,29 @@ test('hints point at letters that really make a word', () => {
   assert.equal(letters, 'act')
   assert.equal(s.hints, 1)
   assert.equal(hint(bowlOf('xqz'), dict), null)
+})
+
+test('bestLeft finds the longest word hiding in the leftovers, everyday words only below six letters', () => {
+  assert.deepEqual(bestLeft(dict, bowlOf('kohln').tiles), { word: 'honk', everyday: true })
+  assert.equal(bestLeft(dict, bowlOf('xqz').tiles), null)
+  assert.equal(bestLeft(dict, bowlOf('oyezl').tiles), null, 'only obscure scraps: nothing to show')
+  const w = bestLeft(dict, bowlOf('cat*').tiles)
+  assert.ok(w && w.word.length === 4 && dict.has(w.word))
+  // a much longer odd word wins only when no everyday word comes within two letters, and it is flagged
+  const r = bestLeft(dict, bowlOf('retainslodu').tiles)
+  assert.ok(r.everyday ? r.word.length >= 7 : r.word.length === 9, JSON.stringify(r))
+  assert.ok(isEveryday('houses') && isEveryday('playing') && isEveryday('baked') && isEveryday('honk'))
+  assert.ok(!isEveryday('bijection') && !isEveryday('joyriding') && !isEveryday('holk'))
+})
+
+test('hints prefer an everyday word over an obscure shorter one', () => {
+  // KOHLN: ENABLE has HON and NOH, but HONK is the word a person would see
+  const s = bowlOf('kohln'), h = hint(s, dict)
+  assert.equal(h.ids.map((id) => s.tiles.find((t) => t.id === id).ch).join(''), 'honk')
+  assert.ok(isCommon('honk') && !isCommon('noh') && !isCommon('hon'))
+  // no everyday word at all: still a hint (any real word)
+  const t = bowlOf('oyezl'), g = hint(t, dict)
+  assert.ok(g && g.length >= 3)
 })
 
 test('save and resume', () => {

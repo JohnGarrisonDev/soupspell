@@ -2,7 +2,7 @@
 import { makeStore, wireChrome, haptic, C } from '../kit/kit.js'
 import { createDict, MIN_WORD } from './logic/dict.js'
 import { createSoup, stepSoup, stepAir, stirSoup, dropSpot, DT, TILE_R, MEAT_R, BOWL_R } from './logic/soup.js'
-import { createSession, restore, snapshot, submit, evaluate, reachable, canExtend, tick, finish, canFinish, hint, peek, ladleLeft, tileById, CHILI_SECS } from './logic/game.js'
+import { createSession, restore, snapshot, submit, evaluate, reachable, canExtend, tick, finish, canFinish, hint, peek, ladleLeft, tileById, CHILI_SECS, bestLeft } from './logic/game.js'
 import { comboMult } from './logic/letters.js'
 import { dateKey, streakInfo, recentDays, rating, nextRating, shareText, compare, RATINGS } from './logic/daily.js'
 import { defaults, sanitize, recordWord, recordBowl, ACHIEVEMENTS } from './logic/save.js'
@@ -309,6 +309,9 @@ function openHowto() {
 function openResult({ mode, session, saved, rec, date }) {
   const today = dateKey()
   let body = ''
+  // 1.3: the best word still hiding in the bowl when it ended (where the letters float does not matter here)
+  const left = session && app.dict && session.endReason !== 'clean' ? bestLeft(app.dict, session.tiles) : null
+  const leftover = left && left.word.length >= 4 ? `<p class="bestword leftover">${left.everyday ? 'Hiding in the leftovers' : 'Longest word left in the bowl'}: <b>${ui.esc(left.word.toUpperCase())}</b></p>` : ''
   if (mode === 'daily') {
     const d = saved || { score: session.score, words: session.wordCount, bestLen: session.longest.length, bestWord: session.best ? session.best.w : '', bestPts: session.best ? session.best.pts : 0, hints: session.hints }
     const rt = rating(d.score), nx = nextRating(d.score), cmp = compare(save.daily.results, date, d.score), st = streakInfo(save.daily.results, today)
@@ -316,7 +319,8 @@ function openResult({ mode, session, saved, rec, date }) {
     if (cmp.days) line = d.score > cmp.best ? `Your best bowl yet! The old record was ${cmp.best}.` : `Your average is ${cmp.average} and your best is ${cmp.best}.${cmp.beaten ? ` This one beats ${cmp.beaten} of your ${cmp.days} earlier ${cmp.days === 1 ? 'bowl' : 'bowls'}.` : ''}`
     const why = session ? (session.endReason === 'clean' ? 'You licked the bowl clean!' : session.endReason === 'nowords' ? 'No words left in the bowl.' : 'You are full.') : 'Today\'s bowl is eaten. A new recipe is served at midnight.'
     app.share = shareText({ date, score: d.score, words: d.words, bestLen: d.bestLen })
-    body = `
+    // two .r-col wrappers: side by side on a sideways screen, display: contents (one column) otherwise
+    body = `<div class="r-col">
       <span class="eyebrow">Daily Bowl · ${ui.esc(prettyDate(date))}</span>
       <h3>${ui.esc(rt.name)}</h3>
       <div class="rating" aria-label="${rt.stars} of 5 stars">${stars(rt.stars)}</div>
@@ -325,14 +329,15 @@ function openResult({ mode, session, saved, rec, date }) {
         <div><b>${d.score}</b><span>points</span></div>
         <div><b>${d.words}</b><span>${d.words === 1 ? 'word' : 'words'}</span></div>
         <div><b>${st.current}</b><span>day streak</span></div>
-      </div>
+      </div></div><div class="r-col">
       ${d.bestWord ? `<p class="bestword">Best word: <b>${ui.esc(d.bestWord.toUpperCase())}</b> for ${d.bestPts}${d.hints ? ` · ${d.hints} ${d.hints === 1 ? 'hint' : 'hints'} used` : ''}</p>` : ''}
+      ${leftover}
       <p class="cmp">${line}</p>
       <div class="stack">
         <button class="btn primary" data-act="share" data-focus>Copy result</button>
         <div class="row2"><button class="btn" data-act="rush">Play Rush</button><button class="btn" data-act="title">Menu</button></div>
       </div>
-      <div data-talk></div>`
+      <div data-talk></div></div>`
   } else {
     const s = session
     body = `
@@ -344,6 +349,7 @@ function openResult({ mode, session, saved, rec, date }) {
         <div><b>${mode === 'rush' ? Math.max(save.bests.rush, s.score) : s.longest.length || 0}</b><span>${mode === 'rush' ? 'best ever' : 'longest'}</span></div>
       </div>
       ${s.best ? `<p class="bestword">Best word: <b>${ui.esc(s.best.w.toUpperCase())}</b> for ${s.best.pts}</p>` : '<p class="bestword">Not a single word. The soup wins this round.</p>'}
+      ${leftover}
       ${mode === 'rush' && rec.previousBest && !rec.newBest ? `<p class="cmp">${rec.previousBest - s.score} short of your best.</p>` : ''}
       <div class="stack">
         <button class="btn primary" data-act="${mode}-again" data-focus>${mode === 'rush' ? 'Go again' : 'New bowl'}</button>
@@ -378,8 +384,29 @@ async function copyShare(btn) {
   try { await navigator.clipboard.writeText(text); ok = true } catch {
     try { const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove() } catch { ok = false }
   }
-  if (ok) { snd.copy(); btn.textContent = 'Copied!' } else btn.textContent = 'Copy failed'
+  if (ok) { snd.copy(); btn.textContent = 'Copied!' } else { btn.textContent = 'Copy it below'; showShareText(btn, text) }
   setTimeout(() => { if (btn.isConnected) btn.textContent = 'Copy result' }, 1800)
+}
+/** 1.3: when the clipboard is refused, show the result text in the card, selected, so it can be copied by hand. */
+function showShareText(btn, text) {
+  const card = btn.closest('.modal')
+  if (!card) return
+  let box = card.querySelector('.sharebox')
+  if (!box) {
+    const note = document.createElement('p')
+    note.className = 'sharenote'
+    note.textContent = 'Your browser would not let us copy. Select the text below and copy it yourself:'
+    box = document.createElement('textarea')
+    box.className = 'sharebox'
+    box.readOnly = true
+    box.rows = 3
+    box.setAttribute('aria-label', 'Your result, to copy')
+    btn.closest('.stack').after(note, box)
+  }
+  box.value = text
+  box.focus({ preventScroll: true })
+  box.select()
+  box.scrollIntoView({ block: 'nearest' })
 }
 
 const actions = {

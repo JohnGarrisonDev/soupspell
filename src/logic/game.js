@@ -4,6 +4,12 @@ import { makeLadle, dailySeed, DAILY_START, DAILY_TOTAL } from './recipe.js'
 import { createSoup, linked, isLetter, dropSpot, TILE_R, MEAT_R, BOWL_R } from './soup.js'
 import { scoreWord, isVowel, WILD_ORDER, VALUES, LENGTH_MULT } from './letters.js'
 import { MIN_WORD, MAX_WORD, WILD } from './dict.js'
+import { COMMON } from './common.js'
+
+/** Everyday 3-5 letter words (for hints only; what counts as a word is the dictionary's call). */
+const commonSet = new Set()
+for (const n of [3, 4, 5]) for (let i = 0; i + n <= COMMON[n].length; i += n) commonSet.add(COMMON[n].slice(i, i + n))
+export const isCommon = (w) => commonSet.has(w)
 
 export const MODES = {
   daily: { bowl: DAILY_START, total: DAILY_TOTAL, meat: 1, time: 0 },
@@ -156,6 +162,35 @@ export function anyWord(dict, tiles) {
   for (const cap of [4, MAX_WORD]) { eachWord(dict, tiles, (w) => { found = w.toLowerCase(); return true }, cap); if (found) break }
   return found
 }
+/** An everyday word: on the common 3-5 letter list, or one of those plus a plain ending (HOUSES, PLAYING, BAKER). */
+export function isEveryday(w) {
+  if (isCommon(w)) return true
+  for (const end of ['s', 'es', 'd', 'ed', 'er', 'ing']) {
+    if (w.length > end.length + 2 && w.endsWith(end)) {
+      const stem = w.slice(0, -end.length)
+      if (isCommon(stem) || (end[0] !== 's' && isCommon(stem + 'e'))) return true
+    }
+  }
+  return false
+}
+/** The word to show as "hiding in the leftovers" when a bowl ends (1.3), ignoring where the letters float.
+ *  Words of 3-5 letters must be everyday ones (no HOLK). Prefers the longest everyday word when it is within two
+ *  letters of the longest word at all; otherwise shows that longest word (BIJECTION) and says so plainly.
+ *  -> { word (lower case), everyday: bool } or null. */
+export function bestLeft(dict, tiles) {
+  let best = null, pts = -1, easy = null, easyPts = -1
+  const better = (w, p, cur, curPts) => !cur || w.length > cur.length || (w.length === cur.length && p > curPts)
+  eachWord(dict, tiles, (w) => {
+    const lw = w.toLowerCase()
+    if (w.length <= 5 && !isCommon(lw)) return false
+    const p = plainScore(w)
+    if (better(w, p, best, pts)) { best = w; pts = p }
+    if (isEveryday(lw) && better(w, p, easy, easyPts)) { easy = w; easyPts = p }
+    return false
+  }, MAX_WORD)
+  if (easy && easy.length >= best.length - 2) return { word: easy.toLowerCase(), everyday: true }
+  return best ? { word: best.toLowerCase(), everyday: isEveryday(best.toLowerCase()) } : null
+}
 /** Plain value of a word spelled from a pile (no specials): for bots and hints. Upper-case letters are stars, worth 0. */
 export const plainScore = (w) => { let b = 0; for (const ch of w) b += VALUES[ch] || 0; return b * LENGTH_MULT[w.length] }
 
@@ -202,10 +237,16 @@ export function tick(s, dt) {
   return false
 }
 
-/** A hint: the tiles of one short word that can be made from the bowl, or null. */
+/** A hint: the tiles of one short word that can be made from the bowl, or null. Since 1.3 it prefers an everyday
+ *  word (isCommon) over an obscure ENABLE one, and a common word of 4 letters over a rare 3-letter one. */
 export function hint(s, dict) {
-  let best = null
-  eachWord(dict, s.tiles, (w) => { if (!best || w.length < best.length) best = w; return w.length <= 4 && best.length <= 4 }, 5)
+  let best = null, everyday = null
+  eachWord(dict, s.tiles, (w) => {
+    if (!best || w.length < best.length) best = w
+    if (isCommon(w.toLowerCase()) && (!everyday || w.length < everyday.length)) everyday = w
+    return everyday !== null && everyday.length <= 4
+  }, 5)
+  if (everyday) best = everyday
   if (!best) { const w = anyWord(dict, s.tiles); if (!w) return null; best = w }
   const used = new Set(), ids = []
   for (const ch of best) {

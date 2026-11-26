@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0 (2026-11-26)
+
+- When a bowl ends, the result card shows the best word still hiding in the leftovers, so you know what got away. It picks an everyday word when there is one nearly as long, and says "Longest word left in the bowl" when it can only offer a dictionary oddity.
+- On a phone held sideways, the Daily result card sits in two columns and fits without scrolling.
+- The shared result now ends with the full link, https://games.oddvale.com/soupspell/.
+- Hints point at everyday words now (HONK, not NOH) when the bowl has one.
+- Copy result never leaves you stuck: if your browser blocks copying, the result appears in the card, selected, ready to copy by hand.
+- Bigger noodles on phones: the bowl gets more of the screen (about 37px noodles in full screen on a small phone), and the word box no longer grows when you start tracing, so letters stay put under your finger.
+- Every button is at least 44px, also on a phone held sideways.
+
 ## 1.2.0 (2026-11-26)
 
 Plays better on phones:
