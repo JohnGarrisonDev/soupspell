@@ -5,6 +5,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const ICON = {
   pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>',
   back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5l-7 7 7 7"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h11v14H9l-6-7z"/><path d="m12 9 5 6M17 9l-5 6"/></svg>',
 }
 const noodle = (t) => `<i class="nd ${t.kind}">${t.kind === 'star' ? '★' : esc(t.ch.toUpperCase())}</i>`
 
@@ -48,6 +49,7 @@ export function createUI(root, actions) {
     </div>
     <div class="actions">
       <button class="btn small" data-act="clear" data-f="clearBtn" disabled>Clear</button>
+      <button class="btn small undo" data-act="undo" data-f="undoBtn" aria-label="Remove the last letter" title="Remove the last letter (Backspace)" disabled>${ICON.undo}</button>
       <button class="btn primary" data-act="spell" data-f="spellBtn" disabled>Spell it</button>
     </div>
   </div>
@@ -91,7 +93,7 @@ export function createUI(root, actions) {
       hide(f.hot, !h.hot); if (h.hot) text(f.hot, h.hot)
       text(f.ladle, h.ladle)
       html(f.next, h.next.map(noodle).join(''))
-      f.clearBtn.disabled = !h.canClear; f.spellBtn.disabled = !h.canSpell
+      f.clearBtn.disabled = !h.canClear; f.undoBtn.disabled = !h.canClear; f.spellBtn.disabled = !h.canSpell
       hide(f.fullBtn, !h.canFull); hide(f.hintBtn, !h.canHint)
     },
     /** state: '' | 'valid' | 'bad' | 'done' | 'idle' */

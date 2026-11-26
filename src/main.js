@@ -1,5 +1,5 @@
 // Soupspell entry point: app state, screen flow, input, frame loop, saving. Rules live in src/logic (pure, tested).
-import { makeStore, wireChrome, C } from '../kit/kit.js'
+import { makeStore, wireChrome, haptic, C } from '../kit/kit.js'
 import { createDict, MIN_WORD } from './logic/dict.js'
 import { createSoup, stepSoup, stepAir, stirSoup, dropSpot, DT, TILE_R, MEAT_R, BOWL_R } from './logic/soup.js'
 import { createSession, restore, snapshot, submit, evaluate, reachable, canExtend, tick, finish, canFinish, hint, peek, ladleLeft, tileById, CHILI_SECS } from './logic/game.js'
@@ -144,7 +144,7 @@ function setChain(ids) {
   app.flash = null; app.hint.clear()
   syncWord()
 }
-function pick(id) { app.kbd = null; setChain([...app.chain, id]); snd.pick(app.chain.length); const t = tileById(app.s, id); if (t) t.wob = 0.6 }
+function pick(id) { app.kbd = null; setChain([...app.chain, id]); snd.pick(app.chain.length); haptic(6); const t = tileById(app.s, id); if (t) t.wob = 0.6 }
 function unpick() { if (!app.chain.length) return; snd.unpick(app.chain.length); setChain(app.chain.slice(0, -1)) }
 function clearChain(quiet) { if (!app.chain.length) return; if (!quiet) snd.back(); setChain([]) }
 
@@ -195,7 +195,7 @@ function trySpell(keep) {
   if (!s || s.over || !app.chain.length) return
   const ids = app.chain, r = submit(s, app.dict, ids)
   if (!r.ok) {
-    snd.nope(); ui.shakeWord(); react('sad')
+    snd.nope(); ui.shakeWord(); react('sad'); haptic([10, 50, 10])
     if (r.reason === 'short') ui.toast(`Words need ${MIN_WORD} letters or more`, 1400)
     if (!keep || r.reason === 'links') setChain([])
     return
@@ -203,7 +203,7 @@ function trySpell(keep) {
   const len = r.word.length, today = dateKey()
   // slurp: the letters fly to the chef one after another
   r.removed.forEach((t, i) => fx.flying.push({ tile: { ...t, wob: 0 }, t: -i * 0.05, life: 0.42 }))
-  snd.gulp(len)
+  snd.gulp(len); haptic(len >= 6 ? [18, 40, 28] : 18)
   const praise = PRAISE[Math.min(9, len)]
   react(len >= 6 ? 'kiss' : 'happy', Math.min(2.2, 0.6 + (len - 3) * 0.4), praise ? praise[s.wordCount % praise.length] : '')
   if (len >= 6) { snd.kiss(); burst(r.removed, len >= 7 ? 46 : 24) }
@@ -268,7 +268,7 @@ function endBowl() {
   const good = s.mode === 'daily' ? rating(s.score).stars >= 3 : rec.newBest
   setTimeout(() => {
     if (app.s !== s) return
-    snd.done(good); react('happy', 1.6, s.mode === 'rush' ? 'Time!' : 'All done!')
+    snd.done(good); haptic(good ? [20, 60, 20, 60, 40] : 30); react('happy', 1.6, s.mode === 'rush' ? 'Time!' : 'All done!')
     openResult({ mode: s.mode, session: s, rec, date: s.date })
     award(rec.earned)
   }, s.endReason === 'full' ? 250 : 1100)
@@ -396,6 +396,7 @@ const actions = {
   title() { snd.back(); if (app.s && !app.s.over) persist(); showTitle() },
   end() { snd.click(); ui.closeModal(); if (app.s) { finish(app.s); endBowl() } },
   clear() { clearChain() },
+  undo() { unpick(); app.kbd = null },
   spell() { trySpell(true) },
   hint() { useHint() },
   full() {
@@ -433,7 +434,8 @@ canvas.addEventListener('pointerdown', (e) => {
   const t = playable() ? tileAt(soup, w.x, w.y, 1.18) : null
   if (t && t.kind !== 'meat') {
     const ch = app.chain, at = ch.indexOf(t.id)
-    const ptr = app.ptr = { id: e.pointerId, mode: 'trace', sx: e.clientX, sy: e.clientY, moved: false, onLast: false, fresh: false }
+    const ptr = app.ptr = { id: e.pointerId, mode: 'trace', sx: e.clientX, sy: e.clientY, moved: false, onLast: false, fresh: false, touch: e.pointerType !== 'mouse', fx: 0, fy: 0 }
+    fingerAt(ptr, e)
     if (at >= 0 && at === ch.length - 1) ptr.onLast = true
     else if (at >= 0) { setChain(ch.slice(0, at + 1)); snd.unpick(at + 1) }
     else if (ch.length && canExtend(app.s, ch, t.id)) pick(t.id)
@@ -456,6 +458,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (!ptr || ptr.id !== e.pointerId) return
   if (ptr.mode === 'trace') {
     if (!playable()) return
+    fingerAt(ptr, e)
     if (!ptr.moved && Math.hypot(e.clientX - ptr.sx, e.clientY - ptr.sy) > 9) ptr.moved = true
     if (!ptr.moved) return
     const t = tileAt(app.s.soup, w.x, w.y, 0.86), ch = app.chain
@@ -491,6 +494,10 @@ function endPointer(e, cancel) {
 }
 canvas.addEventListener('pointerup', (e) => endPointer(e, false))
 canvas.addEventListener('pointercancel', (e) => endPointer(e, true))
+// Capture lost without a pointerup (the browser took the gesture, an alert, a second window): drop the stroke quietly.
+canvas.addEventListener('lostpointercapture', (e) => endPointer(e, true))
+/** Where the finger is, in canvas pixels: render.js shows the letter under it in a bubble above, so the finger never hides it. */
+function fingerAt(ptr, e) { const b = canvas.getBoundingClientRect(); ptr.fx = e.clientX - b.left; ptr.fy = e.clientY - b.top }
 canvas.addEventListener('contextmenu', (e) => e.preventDefault())
 
 function ripple(x, y, r0, r1, life) { if (fx.ripples.length < 40) fx.ripples.push({ x, y, r0, r1, age: 0, life }) }
@@ -607,8 +614,9 @@ function render() {
   const chain = []
   const chainIndex = new Map()
   if (s) app.chain.forEach((id, i) => { const t = tileById(s, id); if (t) { chain.push(t); chainIndex.set(id, i) } })
+  const p = app.ptr, finger = p && p.mode === 'trace' && p.touch && p.moved && chain.length ? { x: p.fx, y: p.fy, tile: chain[chain.length - 1] } : null
   R.draw({
-    time: app.time, spin: app.spin, tiles: soup ? soup.tiles : [], chain, chainIndex, reach: app.reach, starLetters: app.starLetters,
+    finger, time: app.time, spin: app.spin, tiles: soup ? soup.tiles : [], chain, chainIndex, reach: app.reach, starLetters: app.starLetters,
     hint: app.hint, cursor: -1, ripples: fx.ripples, drops: fx.drops, flying: fx.flying, confetti: fx.confetti, chef, spoon: app.spoon,
     ladleText: s && s.mode === 'daily' ? String(ladleLeft(s)) : '',
   })
@@ -643,6 +651,7 @@ function relayout() {
 }
 new ResizeObserver(relayout).observe(stage)
 document.addEventListener('fullscreenchange', relayout)
+stage.addEventListener('oddvale:fullscreen', () => requestAnimationFrame(relayout))
 
 // ------------------------------------------------------------------ boot
 

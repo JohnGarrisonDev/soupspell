@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 (2026-11-26)
+
+Plays better on phones:
+- Full screen on every phone, iPhone included: tap "Play full screen" under the bowl. The bowl and buttons re-fit to the whole screen, upright or sideways, and stay clear of the notch.
+- A backspace button next to Clear takes off just the last letter.
+- While you trace a word with your finger, the letter under it pops up in a bubble above, so your finger never hides it.
+- Bigger buttons (Clear, Stuck?, I'm full), larger hint and message text, and a little buzz when you pick a letter, slurp a word or miss (Android, when sound is on).
+
 ## 1.1.0 (2026-11-25)
 
 - Tell us how hard today's Daily Bowl was with one tap, and see how your score did against everyone else's today. Anonymous: nothing about you is stored.

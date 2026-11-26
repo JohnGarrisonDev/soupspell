@@ -232,6 +232,13 @@ export function createRenderer(canvas) {
     g.globalAlpha = 1
     drawChef(sc, false)
 
+    // touch tracing: the last letter, magnified in a bubble above the finger (the finger hides the real one)
+    if (sc.finger) {
+      const f = sc.finger, r = f.tile.r * S * 1.6, lift = Math.max(76, r * 2.8)
+      const bx = Math.max(r + 6, Math.min(W - r - 6, f.x)), by = f.y - lift < r + 6 ? f.y + lift * 0.4 + r : f.y - lift
+      g.fillStyle = 'rgba(255,253,248,0.92)'; circle(bx, by, r * 1.28); g.fill(); ink(Math.max(2, lw * 0.8)); g.stroke()
+      drawTile(f.tile, sc, bx, by, 1.6, 1)
+    }
     // the spoon
     if (sc.spoon) {
       const x = cx + sc.spoon.x * S, y = cy + sc.spoon.y * S

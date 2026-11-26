@@ -72,11 +72,19 @@ Serve the folder and open `/?debug`. `window.__game` has: `state()`, `advance(se
 
 ## Known weak spots
 
-- Drag-tracing on a small phone hides the letter under the finger; the big word display above the bowl is the feedback. Tap play is the precise alternative.
+- Drag-tracing on a small phone hides the letter under the finger. Since 1.2.0 a touch trace draws the last picked letter magnified in a bubble ~76px above the finger (`scene.finger`, drawn at the end of `render.js`), and the big word display above the bowl is the main feedback. Tap play is the precise alternative.
 - A crowded 30-letter soup can take several seconds to go fully to rest (the main motion stops in about a second; the rest is tiny settling).
 - The dictionary is ENABLE as-is: some odd words are accepted and some everyday proper nouns and newer words are not. Hints can point at obscure words.
 - The swirl is a rigid rotation of the whole bowl, so circular stirring is mostly for show; real mixing comes from the spoon dragging letters.
 - Phone landscape: the kit sizes the stage from the viewport height, so it is small unless the player goes full screen.
+
+## Phones and full screen (1.2.0)
+
+- The kit's `wireChrome` gives full screen on every phone (native, or the iPhone "focus" fallback; both add `.stage.is-full`). In full screen `game.css` insets `.ui` by the safe areas, exactly like the kit insets the canvas, so the slot rect and the canvas stay in the same coordinates. Keep those two in step if you touch either.
+- The kit's 44px exit button sits top-right inside the stage: the portrait HUD gets `padding-right: 50px` and the landscape ladle `padding-top: 48px` in full screen.
+- Touch word entry: tap letters, the backspace button (`data-act="undo"`) un-picks the last one, Clear empties, Spell it submits. No text input anywhere, so the phone keyboard never opens.
+- `haptic()` from the kit on pick, slurp, miss and the end of a bowl. `lostpointercapture` is treated like `pointercancel`; a second finger is ignored while one is down (`app.ptr`).
+- `game.css` sizes the injected "Play full screen" button's icon (kit workaround: the kit's `.stage-cta svg` has no size yet).
 - The canvas redraws every frame even when nothing moves.
 
 ## Ideas backlog
@@ -86,7 +94,6 @@ Serve the folder and open `/?debug`. `window.__game` has: `state()`, `advance(se
 - More specials, one at a time: an ice cube that freezes its neighbours in place, a twin noodle that counts as two letters, a bubble that pops and scatters letters.
 - Bowl shapes for Zen (a square pan, a figure-eight casserole).
 - A share image (canvas to PNG: the empty bowl, the score, the chef) next to the text result.
-- Haptics on pick and gulp.
 - A colour-blind check of gold/chili/star: they already have badges, but test it.
 - Idle-throttle the render loop when the soup is at rest and nothing animates.
 - Themed daily recipes on special dates (extra golden noodles on Fridays), behind a dated code path so old days never change.

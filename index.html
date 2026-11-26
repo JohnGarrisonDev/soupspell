@@ -8,6 +8,13 @@
   <link rel="canonical" href="https://games.oddvale.com/soupspell/" />
   <meta name="theme-color" content="#17131f" />
   <link rel="icon" href="kit/favicon.svg" type="image/svg+xml" />
+  <!-- "Add to Home Screen" opens the whole arcade like an app (no browser bars), from any game page. -->
+  <link rel="manifest" href="../site.webmanifest" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Oddvale Games" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Oddvale Games" />
   <meta property="og:title" content="Soupspell — Oddvale Games" />
@@ -61,7 +68,8 @@
         </ul></div>
         <div class="card yellow"><h2>Controls</h2><ul>
           <li><b>Touch or mouse:</b> drag from a letter through its neighbours and let go to spell. Drag back to un-pick. Drag through open broth to stir.</li>
-          <li><b>Tap play:</b> tap letters one at a time, then tap <b>Spell it</b> or the last letter again. Tap the broth to clear.</li>
+          <li><b>Tap play:</b> tap letters one at a time, then tap <b>Spell it</b> or the last letter again. The backspace button takes off the last letter; <b>Clear</b> (or a tap on the broth) starts over.</li>
+          <li><b>On a phone:</b> tap <b>Play full screen</b> under the bowl for the biggest letters.</li>
           <li><b>Keyboard:</b> type letters, <kbd>Tab</kbd> swaps to another copy of the letter, <kbd>Backspace</kbd> un-picks, <kbd>Enter</kbd> spells, <kbd>Esc</kbd> clears.</li>
           <li>Arrow keys give the soup a push, holding <kbd>Space</kbd> stirs in circles.</li>
         </ul></div>
@@ -73,7 +81,7 @@
 
   <footer class="footer">
     <div class="wrap">
-      <span>Soupspell v1.1.0 · An <a href="https://oddvale.com">Oddvale</a> game. Your progress is saved in this browser only.</span>
+      <span>Soupspell v1.2.0 · An <a href="https://oddvale.com">Oddvale</a> game. Your progress is saved in this browser only.</span>
       <span><a href="../">More games</a> · <a href="https://github.com/JohnGarrisonDev/soupspell/issues/new?template=feedback.yml" target="_blank" rel="noopener">Feedback</a> · <a href="../privacy/">Privacy</a> ·<a href="https://github.com/JohnGarrisonDev/soupspell">Source</a></span>
     </div>
   </footer>
